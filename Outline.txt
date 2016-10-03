@@ -1,0 +1,72 @@
+1. First we will have to open the input file.
+2. Then we will have to open the output file.
+3. Then we will start the main loop. It will load one character at a time until it hits end of file.
+  a. You will first pass the character to my "nextState" along with our previous state.
+    1. The program starts in state 1, or neutral state.
+    2. If my function returns state 1, we have completed a token.
+      i. To find out what token we found enter the previous state into symbols[]. It will contain the token number
+          of the token we just completed.
+      ii. Once you get the token number, enter it into token[]. It will return the string value of the token.
+        iia. If the token is "nulsym" then discard it. It was likely whitespace, which will return those tokens.
+        iib. If the token is "" then we encountered a problem. This should only happen if we reach end of file in a
+            comment in which case there is no need for action, or if we recieved a : and then ended the file. In the
+            latter case we should return an error, "Encountered : and expected =, but instead encountered EOF"
+    3. If my function returns state 0, we have entered the error state. We cannot continue parsing the file and should
+        look at the previous state to find out why we entered this state to produce an appropriate error message.
+      i. One common error may be "Encountered : and expected a =, but instead found a <%c> instead." This error is
+          because the : is never used alone or with any other character but as a := in succession.
+      ii. Another common error would be encountering any character that is not normally used in the language in any way.
+          My function would not know how to use a "ö" for example. It is not in the list of letters or numbers for
+          identifiers, and it is never used by another symbol. If I encountered it, I would immediately move to state 0.
+  b. After my function returns our next state, you will have to keep track of stateNext and stateLast for a time until
+      determine what our next course of action will be.
+    1. If we are in states 2-57 or 59, you will have to append the character to a string. This is because it may be part
+      of an identifier or number.
+      i. If it is an identifer, and has become 13 characters long, you will have to throw an error there for a too long
+          identifier. "Error: Identifer longer than 12 characters detected." should suffice.
+      ii. If it is a number (state 59) and has become 6 characters long, you will have to throw an error there for a too
+          large number. "Error: Numbers are restricted to 65535 or less." should suffice.
+    2. If we are in state 0, you know from 3 above what to do. See 3.a.3 for what that state means.
+    3. If we enter into state 1, we have completed a token. See 3.a.2 for how to find out what token we have completed.
+      i. Note, if we completed a number token, you will have to check one more time to see if the number was greater than
+          65535. This is because 65536-99999 are all 5 characters long, but are larger than the max size. See 3.b.1.ii. for
+          the error to throw.
+      ii. Once we know what token we have found we will output the token to the file. token[symbol[lastState]] will get you
+          the basic token string.
+        iia. "identsym" will need to be appended with the string you are keeping of the current identifier in parenthesis.
+            e.g. "identsym (<counter>)"
+        iib. "numbersym" will have to be appended with the string you are keeping of the current number string in parenthesis.
+            e.g. "numbersym (<number>)"
+    4. Once you have outputted the token if needed, you will set lastState = nextState.
+      i. If lastState is now 1, clear the buffer string used for identifiers or numbers.
+      ii. If lastState is now 1, you will also have to continue our loop without loading the next character ***important***
+          ***also important*** skip this step if and only if our last state == our next state == 1. In this case it was whitespace.
+        iia. This is because the character triggered an escape from the last state to output a token, but was not actually processed.
+  c. Now you will load the next character and go back to the loop.
+    1. If the next character is EOF, you will leave the loop, but after the loop, you will have to call nextState one more time.
+        This is because we could be in the middle of building a token. You will call my nextState with "EOF" which hopefully
+        will trigger the escape to state 1. If we escape to state 0 instead (or any other state) we may have a problem. Process 
+        this new end state as you normally would.
+    2. After you pass the EOF to my nextState, you will need to output one more token to the file. This time you are outputting
+        "nulsym". This marks the end of the file for the parser.
+4. Once the loop is completed, you will need to close the files, and then we're done.
+
+If you are curious as to how nextState works, it is simply a lookup table, trading space for speed. It will solve this problem
+in O(n) time, rather than O(n^2) time which a more traditional approach would take. After all, we are only ever checking each
+character twice at the most, where a more traditional method would check "p", then "pr", then "pro"... until it finished checking
+the entire token "procedure." However the trade off is not just space in the program, but time it took to build the DFA.
+
+This is in fact an oracle system, if you've ever heard of one. From your perspective you give it input, and it pulls valid output
+in O(n) time without you having to understand how it works. You just know that it does, and that if it gives you certain patterns,
+you are expected to do certain things in return. Think of an old man on a hill. If you tell him something today, he will shout out
+something random. He doesn't understand why he said it, you don't understand why he said it, but you know if you come back tomorrow
+and tell him the next thing, that you will move closer to the correct answer.
+
+Anyways, I hope this helps you understand what needs to be done with my DFA, and how to use it. The basic tasks we have left to do 
+are as follows:
+Organize input/output
+Recognize errors
+Assemble the input string being used for the next identifier/number token
+Assemble Identifier and Number tokens into their final form
+Debugging (if you are getting weird output from my DFA, let me know, and give me the problematic input and output and I'll see if I
+           can figure out what is going wrong.)
