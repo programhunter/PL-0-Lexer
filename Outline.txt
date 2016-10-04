@@ -1,5 +1,6 @@
-1. First we will have to open the input file.
-2. Then we will have to open the output file.
+1. First we will have to open the input file. We will also have to detect if the flags "--source" or "--clean" have been given
+2. We will have to print out the source if "--source" is given.
+  a. If "--clean" is given, we print out the source without comments.
 3. Then we will start the main loop. It will load one character at a time until it hits end of file.
   a. You will first pass the character to my "nextState" along with our previous state.
     1. The program starts in state 1, or neutral state.
