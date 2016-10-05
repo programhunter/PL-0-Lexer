@@ -225,39 +225,81 @@ int nextState(int state, char next)
 }
 
 void remove_comments()
+
 {
+
     FILE * ifp = fopen("input.pl0", "r");
+
     
-    int current_char;
+
+    int current_char, numSpaces=0;
+
     
+
     while ((current_char = getc(ifp)) != EOF )
+
     {
+
         
+
         if (current_char=='/')             
+
         {
+
             current_char=getc(ifp);
+
         
+
             if (current_char != '*')                 
+
             {
+
                 putchar('/');
+
                 ungetc(current_char,ifp);
+
             }
+
    
+
             else
+
             {
+
                 int previous_char;
+                numSpaces=2;
+
                 putchar(' ');
+
                 do
+
                 {
+
                     previous_char=current_char;
+
                     current_char=getc(ifp);
+                    numSpaces++;
+
                 } while (current_char!='/' || previous_char != '*');
+                
+                for(numSpaces; numSpaces>0; numSpaces--)
+                	putchar(' ');
+
             }
+
         }
+
         
+
         else
+
         {
+
             putchar(current_char);
+
         }
+
     }
+
 }
+
