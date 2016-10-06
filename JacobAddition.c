@@ -162,7 +162,8 @@ int analyzeTokens()
 
 
     // Reads the program one char at a time and saves symbols (tokens) to linked list
-    c = ' ';    // Initialized to avoid immediately, falsely exiting the while loop
+
+    c = fgetc(inputFile);   // Retrieves the first char of the next token
     while ( c != EOF )
     {
         stateNow = 1;   // Initialize at "Begin / End" state of "const int edges"
@@ -171,24 +172,25 @@ int analyzeTokens()
         foundTok = 0;   // Will change to 1 if a token is found
         symNum = 0;     // Will retrieve token name from "const char token"
 
-        c = fgetc(inputFile);   // Retrieves the first char of the next token
         // Builds a single token (symbol) of up to TOK_WIDTH chars in length
         while ( (foundTok != 1) && (stateTotal < TOK_WIDTH) && (c != EOF) )
         {
             statePrev = stateNow;
             stateNow = edges[stateNow][(int)c]; // Moves to the next state
-            printf("\t%d\n", stateNow); // TEST
+            // printf("\tstatePrev = %d\tstateNow = %d\n", statePrev, stateNow); // TEST
 
             // Found a token if the state is the "Begin / End" state ...
             // ... and the current token consists of at least one character.
             if ( (stateNow == 1 ) && (stateTotal > 0) ) {
-                printf("found symbol!\t");  // TEST
+                // printf("found symbol!\t");  // TEST
                 foundTok = 1;   // True, we found a token
                 symNum = symbols[statePrev]; // Retrieves the token (symbol) number
-                printf("symNum = %d\n", symNum);    // TEST
+                // printf("symNum = %d\n", symNum);    // TEST
+            } else {
+                stateTotal++;   // Number of states visited for building current token
+                c = fgetc(inputFile);   // Retrieve the next char from the program file
             }
-            stateTotal++;   // Number of states visited for building current token
-            c = fgetc(inputFile);   // Retrieve the next char from the program file
+
         }
 
         // Add token to linked list, providing not end of file
