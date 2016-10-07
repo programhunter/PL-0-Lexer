@@ -1,6 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define TOK_WIDTH 13    // The max width of an identifier
+
+
+// Each token of the program will be placed in a tokNode
+struct tokNode {
+    char tok[TOK_WIDTH];
+    int tokType;
+};
 
 /*
     This is my state array. I use it to find out which state we are moving to
@@ -119,18 +127,6 @@ const int edges [79] [256]={/*NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, HT, LF
               /* state 0, 1, 2, 3, 4, 5,  6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78*/
 const int symbols[79]={0, 1, 2, 2, 2, 2, 21, 2, 2, 2, 27,  2,  2,  2, 28,  2, 26,  2,  2,  2, 33,  2, 22,  2, 23,  2,  2,  8,  2,  2,  2,  2,  2,  2,  2,  2, 30,  2,  2,  2, 32,  2,  2,  2, 24,  2,  2, 29,  2,  2,  2,  2, 25,  2,  2,  2, 31,  2, 18,  3,  4, 19,  7,  0,  0,  1,  5,  6,  9, 11, 10, 12, 13, 14, 15, 16, 17,  0, 20};
 
-/*
-    This is the array that you can look up the symbol number in and get the text
-    equivalent of the symbol we send to file. Just put in the symbol number as the
-    index into the array.
-
-    Special note: I know I said nulsym is not used by the language, but you do use
-    it once at the end of every file/program. Only then should you print symbol 1.
-
-    --Mel Pelchat
-*/
-const char token[34][13]={"", "nulsym", "identsym", "numbersym", "plussym", "minussym", "multsym", "slashsym", "oddsym", "eqlsym", "neqsym", "lessym", "leqsym", "gtrsym", "geqsym", "lparentsym", "rparentsym", "commasym", "semicolonsym", "periodsym", "becomessym", "beginsym", "endsym", "ifsym", "thensym", "whilesym", "dosym", "callsym", "constsym", "varsym", "procsym", "writesym", "readsym", "elsesym"};
-
 /*  int nextState(int state, char next)
 
     This function takes in one state and the next character. It returns the next
@@ -163,43 +159,50 @@ const char token[34][13]={"", "nulsym", "identsym", "numbersym", "plussym", "min
     --Mel Pelchat
 */
 int nextState(int state, char next);
-void clean();
-void source();
-void remove_comments();
+void clean(char *fileName);
+void source(char *fileName);
+void remove_comments(char *fileName);
+int analyzeTokens(char *fileName);   // Display all tokens found within the program
+struct tokNode *makeTokNode();  // Makes a new token node for the linked list
+void setNode(struct tokNode *emptyNode, char *sym, int symNum); // Saves a token to a node
+void printTokens(struct tokNode *head); // Displays all of the tokens found in the program
 
 
 int main(int argc, char * argv[])
 {
     char clean_array[8] = "--clean";
     char source_array[8] = "--source";
-    
-    int i; 
-    
-    if(argc < 2)
-        printf("\n\nno command line prompts were passed.\n\n");
-	
-	for(i = 1; i < argc; i++)
+
+    int i;
+
+    if(argc < 2)                        //First argument is the file name
+    {
+        printf("\n\nno command line prompts were passed.\n\n"); //Cannot proceed without the file name
+        return 1;
+    }
+
+	for(i = 2; i < argc; i++)
 	{
 	    if(strcmp(clean_array, argv[i]) == 0)
-	        clean();
-	        
+	        clean(argv[1]);             //Need to pass the file name to open the right file
+
 	    if(strcmp(source_array, argv[i]) == 0)
-	        source();
+	        source(argv[1]);            //Need to pass the file name to open the right file
 	}
-    
+
     printf("\n\n");
-    
+
     return 0;
 }
 
-void source()
+void source(char *fileName)
 {
-    FILE * ifp = fopen("input.pl0", "r");
-    printf("\n\nsource code:\n");
+    FILE * ifp = fopen(fileName, "r");
+    printf("\n\nsource code: %s\n", fileName);
     printf("------------\n");
-    
+
     int c;
-    
+
     while((c = fgetc(ifp)) != EOF)
        {
            putchar(c);
@@ -210,13 +213,13 @@ void source()
     fclose(ifp);
 }
 
-void clean()
+void clean(char *fileName)
 {
-    
-    printf("\nsource code without comments:\n");
-    printf("----------------------------\n");
-    remove_comments();
-    
+
+    printf("\nsource code without comments: %s\n", fileName);
+    printf("-----------------------------\n");
+    remove_comments(fileName);
+
 }
 
 int nextState(int state, char next)
@@ -224,25 +227,25 @@ int nextState(int state, char next)
     return edges[state][(int)next];
 }
 
-void remove_comments()
+void remove_comments(char *fileName)
 {
-    FILE * ifp = fopen("input.pl0", "r");
-    
+    FILE * ifp = fopen(fileName, "r");
+
     int current_char;
-    
+
     while ((current_char = getc(ifp)) != EOF )
     {
-        
-        if (current_char=='/')             
+
+        if (current_char=='/')
         {
             current_char=getc(ifp);
-        
-            if (current_char != '*')                 
+
+            if (current_char != '*')
             {
                 putchar('/');
                 ungetc(current_char,ifp);
             }
-   
+
             else
             {
                 int previous_char;
@@ -254,10 +257,87 @@ void remove_comments()
                 } while (current_char!='/' || previous_char != '*');
             }
         }
-        
+
         else
         {
             putchar(current_char);
         }
     }
+}
+
+
+// Prints the 3rd output option - each token found in the program
+int analyzeTokens(char *fileName)
+{
+    FILE *inputFile = fopen(fileName, "r");                         // Reads the program
+    char c;                                                         // Will read the program one char at a time
+
+    struct tokNode token;                                           // Not using linked list this way
+
+    int stateNow;                                                   // The current state we are at within "const int edges"
+    int statePrev;                                                  // The previous state we were at within "const int edges"
+    int position;                                                   // The current position in the identifier string
+    token.tok[0] = '\0';                                            // Null terminate the string
+
+    printf("\n\ntokens:\n");
+    printf("-------\n");
+    // Reads the program one char at a time and saves symbols (tokens) to linked list
+
+    stateNow = 1;
+    statePrev = 1;
+    position = 0;
+    while ( c != EOF )
+    {
+        c = fgetc(inputFile);                                       // Retrieves the first char of the next token
+
+        stateNow = nextState(statePrev, c);                         // Get the next state
+
+        if (stateNow == 1)                                          // if we are back at 1
+        {
+            if (statePrev == 1 || statePrev == 65)                  // Either it was whitespace or a comment
+                continue;                                           // and we continue
+            else                                                    // or it wasn't
+            {
+                /*
+                    This is where you will check to see if the identifier represents a number or a variable
+                    If its a number you will have to check if its greater than 65535. If it is then you give the error message,
+                    "Number too large",  close the file and then "exit(1);" to indicate that we terminated with an error
+                    The "exit" function takes a parameter and terminates a program even in a function so it
+                    is required at this point.
+                */
+                ungetc(c, inputFile);                               // so we put the character back to use next run
+                printf("%s\t%d\n", token.tok, symbols[statePrev]);  // print the token in the output
+                position = 0;                                       // reset our string pointer
+                token.tok[0]='\0';                                  // and our string for the next token
+            }
+        } else if (stateNow == 0)
+        {
+            /*
+                This is where you check to see what the previous state was, and write an error message stating the appropriate message
+
+                Option 1: We received a bad character that is not used in PL0. e.g. '"' is not used at all. Return that the current
+                character was not recognized as a part of the language
+
+                Option 2: We received a ':' but did not receive a '=' right after. PL0 does not use ':' in any way other than to follow
+                with a '=' for assignments. State that we received a ':' character, and expected a '=', but instead got a "%c" instead
+
+                In any option you will need to close the file, and then exit(1); to terminate the program.
+            */
+        }else                                                       // If we aren't at 1 or 0 we're not done so we
+        {
+            /*
+                This is where you will check to see if the position pointer is at 12 already. If it is allowed
+                to continue, we will crash. Instead output that the identifier was longer than 12 characters,
+                close the file, and then use the function "exit(1);" to exit the program. We shouldn't use an
+                identifier too long anyways.
+            */
+            token.tok[position] = c;                                // Add the character to the string
+            token.tok[position+1] = '\0';                           // Move the string terminator
+            position++;                                             // Increment our position
+        }
+        statePrev = stateNow;                                       // If we get here, time to move onto the next loop
+    }
+
+    fclose(inputFile);
+    return 0;
 }
