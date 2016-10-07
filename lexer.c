@@ -163,15 +163,13 @@ void clean(char *fileName);
 void source(char *fileName);
 void remove_comments(char *fileName);
 int analyzeTokens(char *fileName);   // Display all tokens found within the program
-struct tokNode *makeTokNode();  // Makes a new token node for the linked list
-void setNode(struct tokNode *emptyNode, char *sym, int symNum); // Saves a token to a node
-void printTokens(struct tokNode *head); // Displays all of the tokens found in the program
 
 
 int main(int argc, char * argv[])
 {
     char clean_array[8] = "--clean";
-    char source_array[8] = "--source";
+    char source_array[9] = "--source";
+
 
     int i;
 
@@ -189,8 +187,8 @@ int main(int argc, char * argv[])
 	    if(strcmp(source_array, argv[i]) == 0)
 	        source(argv[1]);            //Need to pass the file name to open the right file
 	}
+    analyzeTokens(argv[1]);
 
-    printf("\n\n");
 
     return 0;
 }
@@ -263,6 +261,7 @@ void remove_comments(char *fileName)
             putchar(current_char);
         }
     }
+    printf("\n");
 }
 
 
@@ -270,7 +269,7 @@ void remove_comments(char *fileName)
 int analyzeTokens(char *fileName)
 {
     FILE *inputFile = fopen(fileName, "r");                         // Reads the program
-    char c;                                                         // Will read the program one char at a time
+    char c = ' ';                                                   // Will read the program one char at a time
 
     struct tokNode token;                                           // Not using linked list this way
 
@@ -288,14 +287,22 @@ int analyzeTokens(char *fileName)
     position = 0;
     while ( c != EOF )
     {
-        c = fgetc(inputFile);                                       // Retrieves the first char of the next token
-
-        stateNow = nextState(statePrev, c);                         // Get the next state
+        c = getc(inputFile);                                        //Retrieves the first char of the next token
+        if (c == EOF)
+            stateNow = nextState(statePrev, ' ');                   // EOF = -1 which would break my function. Instead I pass it white space
+        else
+            stateNow = nextState(statePrev, c);                     // Get the next state
 
         if (stateNow == 1)                                          // if we are back at 1
         {
-            if (statePrev == 1 || statePrev == 65)                  // Either it was whitespace or a comment
+            if (statePrev == 1)                                     // Either it was whitespace
                 continue;                                           // and we continue
+            else if (statePrev == 65)                               // or it was a comment
+            {
+                ungetc(c, inputFile);                               // return the unused character to the file and proceed
+                position = 0;
+                token.tok[0]='\0';
+            }
             else                                                    // or it wasn't
             {
                 /*
@@ -331,11 +338,21 @@ int analyzeTokens(char *fileName)
                 close the file, and then use the function "exit(1);" to exit the program. We shouldn't use an
                 identifier too long anyways.
             */
-            token.tok[position] = c;                                // Add the character to the string
-            token.tok[position+1] = '\0';                           // Move the string terminator
-            position++;                                             // Increment our position
+            if (stateNow < 63 || stateNow > 65)
+            {
+                token.tok[position] = c;                                // Add the character to the string
+                token.tok[position+1] = '\0';                           // Move the string terminator
+                position++;                                             // Increment our position
+            }
         }
-        statePrev = stateNow;                                       // If we get here, time to move onto the next loop
+        statePrev = stateNow;                                           // If we get here, time to move onto the next loop
+    }
+    if (stateNow != 1)                                                  // If we didn't end in the final state
+    {
+        /*
+            Need to check to see what happened. Either we're in state 0, or we're in the middle of a token for some reason
+            We need to tell the user what the problem is and then "exit(1)"
+        */
     }
 
     fclose(inputFile);
