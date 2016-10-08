@@ -1,3 +1,10 @@
+// Team name:  Compiler Builder 11
+//
+// Emily ["Mel"] Pelchat
+// Hunter Pierce
+// Jacob Hazelbaker
+// Jessica ["Kika"] Wingert
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -6,8 +13,8 @@
 
 // Each token of the program will be placed in a tokNode
 struct tokNode {
-    char tok[TOK_WIDTH];
-    int tokType;
+    char tok[TOK_WIDTH];    // The name of a given token
+    int tokType;            // corresponding number from "const int symbols"
 };
 
 /*
@@ -158,156 +165,94 @@ const int symbols[79]={0, 1, 2, 2, 2, 2, 21, 2, 2, 2, 27,  2,  2,  2, 28,  2, 26
 
     --Mel Pelchat
 */
-int nextState(int state, char next);
-void clean(char *fileName);
-void source(char *fileName);
-void remove_comments(char *fileName);
-int analyzeTokens(char *fileName);   // Display all tokens found within the program
+
+int analyzeTokens(char *fileName);      // Display all tokens found within the program
+void clean(char *fileName);             // Displays the code without any comments
+int nextState(int state, char next);    // Retrieves next state for analyzeTokens
+void remove_comments(char *fileName);   // The display header for function clean
+void source(char *fileName);            // Displays the code with comments
 
 
-int main(int argc, char * argv[])
+// Example to Run:   Lexer.exe input.txt
+// Optional Arguments:
+//   Display Code Without Comments:  --clean
+//   Display Code With Comments:     --source
+// Example to Run all Functions:   Lexer.exe input.txt --clean --source
+int main(int argc, char *argv[])
 {
-    char clean_array[8] = "--clean";
-    char source_array[9] = "--source";
+    int i;  // Used to traverse argv[] to view passed arguments at run-time
 
-
-    int i;
-
-    if(argc < 2)                        //First argument is the file name
-    {
+    if(argc < 2) {  //First argument is the file name
         printf("\n\nno command line prompts were passed.\n\n"); //Cannot proceed without the file name
-        return 1;
+        return -1;
     }
 
+    // Determine if the user wants to see the code without comments and / or with comments as well
 	for(i = 2; i < argc; i++)
 	{
-	    if(strcmp(clean_array, argv[i]) == 0)
-	        clean(argv[1]);             //Need to pass the file name to open the right file
-
-	    if(strcmp(source_array, argv[i]) == 0)
-	        source(argv[1]);            //Need to pass the file name to open the right file
+	    // The user wishes to see the code without any comments displayed
+	    if(strcmp("--clean", argv[i]) == 0) {
+            clean(argv[1]);             //Need to pass the file name to open the right file
+	    }
+	    // The user wishes to see the code as it is with all comments
+	    if(strcmp("--source", argv[i]) == 0) {
+            source(argv[1]);            //Need to pass the file name to open the right file
+	    }
 	}
+
+	// Will always display the program broken down into individual tokens
     analyzeTokens(argv[1]);
 
-
     return 0;
-}
-
-void source(char *fileName)
-{
-    FILE * ifp = fopen(fileName, "r");
-    printf("\n\nsource code: %s\n", fileName);
-    printf("------------\n");
-
-    int c;
-
-    while((c = fgetc(ifp)) != EOF)
-       {
-           putchar(c);
-       }
-
-    printf("\n\n");
-    rewind(ifp);
-    fclose(ifp);
-}
-
-void clean(char *fileName)
-{
-
-    printf("\nsource code without comments: %s\n", fileName);
-    printf("-----------------------------\n");
-    remove_comments(fileName);
-
-}
-
-int nextState(int state, char next)
-{
-    return edges[state][(int)next];
-}
-
-void remove_comments(char *fileName)
-{
-    FILE * ifp = fopen(fileName, "r");
-
-    int current_char;
-
-    while ((current_char = getc(ifp)) != EOF )
-    {
-
-        if (current_char=='/')
-        {
-            current_char=getc(ifp);
-
-            if (current_char != '*')
-            {
-                putchar('/');
-                ungetc(current_char,ifp);
-            }
-
-            else
-            {
-                int previous_char;
-                putchar(' ');
-                do
-                {
-                    previous_char=current_char;
-                    current_char=getc(ifp);
-                } while (current_char!='/' || previous_char != '*');
-            }
-        }
-
-        else
-        {
-            putchar(current_char);
-        }
-    }
-    printf("\n");
 }
 
 
 // Prints the 3rd output option - each token found in the program
 int analyzeTokens(char *fileName)
 {
-    FILE *inputFile = fopen(fileName, "r");                         // Reads the program
-    char c = ' ';                                                   // Will read the program one char at a time
+    FILE *inputFile = fopen(fileName, "r"); // Reads the program
+    char c = ' ';   // Will read the program one char at a time
 
-    struct tokNode token;                                           // Not using linked list this way
+    struct tokNode token;   // Not using linked list this way
 
-    int stateNow;                                                   // The current state we are at within "const int edges"
-    int statePrev;                                                  // The previous state we were at within "const int edges"
-    int position;                                                   // The current position in the identifier string
-    token.tok[0] = '\0';                                            // Null terminate the string
+    int stateNow;   // The current state we are at within "const int edges"
+    int statePrev;  // The previous state we were at within "const int edges"
+    int position;   // The current position in the identifier string
+    token.tok[0] = '\0';    // Null terminate the string
 
     printf("\n\ntokens:\n");
     printf("-------\n");
     // Reads the program one char at a time and saves symbols (tokens) to linked list
 
-    stateNow = 1;
-    statePrev = 1;
+    stateNow = 1;   // Initialize at the "Begin / End" state
+    statePrev = 1;  // Initialize at the "Begin / End" state
     position = 0;
     while ( c != EOF )
     {
-        c = getc(inputFile);                                        //Retrieves the first char of the next token
-        if (c == EOF)
-            stateNow = nextState(statePrev, ' ');                   // EOF = -1 which would break my function. Instead I pass it white space
-        else
-            stateNow = nextState(statePrev, c);                     // Get the next state
+        c = getc(inputFile);    //Retrieves the first char of the next token
+        if (c == EOF) {
+            stateNow = nextState(statePrev, ' ');   // EOF = -1 which would break my function. Instead I pass it white space
+        }
+        else {
+            stateNow = nextState(statePrev, c);     // Get the next state
+        }
 
-        if (stateNow == 1)                                          // if we are back at 1
+        if (stateNow == 1)  // if we are back at 1
         {
-            if (statePrev == 1)                                     // Either it was whitespace
-                continue;                                           // and we continue
-            else if (statePrev == 65)                               // or it was a comment
+            if (statePrev == 1) {   // Either it was whitespace
+                continue;           // and we continue
+            }
+            else if (statePrev == 65)   // or it was a comment
             {
-                ungetc(c, inputFile);                               // return the unused character to the file and proceed
+                ungetc(c, inputFile);   // return the unused character to the file and proceed
                 position = 0;
                 token.tok[0]='\0';
             }
-            else                                                    // or it wasn't
+            else    // or it wasn't
             {
                 /*
                     This is where you will check to see if the identifier represents a number or a variable
-                    If its a number you will have to check if its greater than 65535. If it is then you give the error message,
+                    If its a number you will have to check if it's greater than 65535. If it is then you give the error message,
                     "Number too large",  close the file and then "exit(1);" to indicate that we terminated with an error
                     The "exit" function takes a parameter and terminates a program even in a function so it
                     is required at this point.
@@ -317,7 +262,8 @@ int analyzeTokens(char *fileName)
                 position = 0;                                       // reset our string pointer
                 token.tok[0]='\0';                                  // and our string for the next token
             }
-        } else if (stateNow == 0)
+        }
+        else if (stateNow == 0)
         {
             /*
                 This is where you check to see what the previous state was, and write an error message stating the appropriate message
@@ -330,7 +276,8 @@ int analyzeTokens(char *fileName)
 
                 In any option you will need to close the file, and then exit(1); to terminate the program.
             */
-        }else                                                       // If we aren't at 1 or 0 we're not done so we
+        }
+        else   // If we aren't at 1 or 0 we're not done so we
         {
             /*
                 This is where you will check to see if the position pointer is at 12 already. If it is allowed
@@ -340,14 +287,14 @@ int analyzeTokens(char *fileName)
             */
             if (stateNow < 63 || stateNow > 65)
             {
-                token.tok[position] = c;                                // Add the character to the string
-                token.tok[position+1] = '\0';                           // Move the string terminator
-                position++;                                             // Increment our position
+                token.tok[position] = c;        // Add the character to the string
+                token.tok[position+1] = '\0';   // Move the string terminator
+                position++;                     // Increment our position
             }
         }
-        statePrev = stateNow;                                           // If we get here, time to move onto the next loop
+        statePrev = stateNow;   // If we get here, time to move onto the next loop
     }
-    if (stateNow != 1)                                                  // If we didn't end in the final state
+    if (stateNow != 1)          // If we didn't end in the final state
     {
         /*
             Need to check to see what happened. Either we're in state 0, or we're in the middle of a token for some reason
@@ -357,4 +304,77 @@ int analyzeTokens(char *fileName)
 
     fclose(inputFile);
     return 0;
+}
+
+
+// Displays the header in preparation to display the code without any comments included
+void clean(char *fileName)
+{
+    printf("\nsource code without comments: %s\n", fileName);
+    printf("-----------------------------\n");
+    remove_comments(fileName);
+}
+
+
+// Supporting function for analyzeTokens to traverse array edges
+int nextState(int state, char next)
+{
+    return edges[state][(int)next];
+}
+
+
+// Displays the program code without any comments included
+void remove_comments(char *fileName)
+{
+    FILE *ifp = fopen(fileName, "r");
+
+    int current_char;
+
+    while ((current_char = getc(ifp)) != EOF )
+    {
+        if (current_char=='/')
+        {
+            current_char=getc(ifp);
+
+            if (current_char != '*')
+            {
+                putchar('/');
+                ungetc(current_char,ifp);
+            }
+            else
+            {
+                int previous_char;
+                putchar(' ');
+                do {
+                    previous_char=current_char;
+                    current_char=getc(ifp);
+                } while (current_char!='/' || previous_char != '*');
+            }
+        }
+        else
+        {
+            putchar(current_char);
+        }
+    }
+    printf("\n");
+}
+
+
+// Displays the program code with comments still included
+void source(char *fileName)
+{
+    FILE *ifp = fopen(fileName, "r");   // fileName provided at run-time as argument
+    printf("\n\nsource code: %s\n", fileName);
+    printf("------------\n");
+
+    int c;  // will be used to read the file one char at a time
+
+    while((c = fgetc(ifp)) != EOF)
+    {
+       putchar(c);  // Displays a char from the program code file
+    }
+
+    printf("\n\n");
+    rewind(ifp);
+    fclose(ifp);
 }
