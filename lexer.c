@@ -1,6 +1,21 @@
+// Team name:  Compiler Builder 11
+//
+// Emily ["Mel"] Pelchat
+// Hunter Pierce
+// Jacob Hazelbaker
+// Jessica ["Kika"] Wingert
+
 #include <stdio.h>
 #include <stdlib.h>
 
+#define TOK_WIDTH 13    // The max width of an identifier
+
+
+// Each token of the program will be placed in a tokNode
+struct tokNode {
+    char tok[TOK_WIDTH];    // The name of a given token
+    int tokType;            // corresponding number from "const int symbols"
+};
 
 /*
     This is my state array. I use it to find out which state we are moving to
@@ -14,7 +29,7 @@
 
     --Mel Pelchat
 */
-const int edges [79] [256]={/*NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, HT, LF, VT, FF, CR, SO, SI, DLE, DC1, DC2, DC3, DC4, NAK, SYN, ETB, CAN, EM, SUB, ESC, FS, GS, RS, US, SPC,  !,  ",  #,  $,  %,  &,  ',  (,  ),  *,  +,  ,,  -,  .,  /,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  :,  ;,  <,  =,  >,  ?,  @,  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  [,  \,  ],  ^,  _,  `,  a,  b,  c,  d,  e,  f,  g,  h,  i,  j,  k,  l,  m,  n,  o,  p,  q,  r,  s,  t,  u,  v,  w,  x,  y,  z,  {,  |,  },  ~, DEL, Ç, ü, é, â, ä, à, å, ç, ê, ë, è, ï, î, ì, Ä, Å, É, æ, Æ, ô, ö, ò, û, ù, ÿ, Ö, Ü, ¢, £, ¥, ₧, ƒ, á, í, ó, ú, ñ, Ñ, ª, º, ¿, ⌐, ¬, ½, ¼, ¡, «, », ░, ▒, ▓, │, ┤, ╡, ╢, ╖, ╕, ╣, ║, ╗, ╝, ╜, ╛, ┐, └, ┴, ┬, ├, ─, ┼, ╞, ╟, ╚, ╔, ╩, ╦, ╠, ═, ╬, ╧, ╨, ╤, ╥, ╙, ╘, ╒, ╓, ╫, ╪, ┘, ┌, █, ▄, ▌, ▐, ▀, α, ß, Γ, π, Σ, σ, µ, τ, Φ, Θ, Ω, δ, ∞, φ, ε, ∩, ≡, ±, ≥, ≤, ⌠, ⌡, ÷, ≈, °, ∙, ·, √, ⁿ, ², ■,   */
+const char edges [79] [256]={/*NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, HT, LF, VT, FF, CR, SO, SI, DLE, DC1, DC2, DC3, DC4, NAK, SYN, ETB, CAN, EM, SUB, ESC, FS, GS, RS, US, SPC,  !,  ",  #,  $,  %,  &,  ',  (,  ),  *,  +,  ,,  -,  .,  /,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  :,  ;,  <,  =,  >,  ?,  @,  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  [,  \,  ],  ^,  _,  `,  a,  b,  c,  d,  e,  f,  g,  h,  i,  j,  k,  l,  m,  n,  o,  p,  q,  r,  s,  t,  u,  v,  w,  x,  y,  z,  {,  |,  },  ~, DEL, Ç, ü, é, â, ä, à, å, ç, ê, ë, è, ï, î, ì, Ä, Å, É, æ, Æ, ô, ö, ò, û, ù, ÿ, Ö, Ü, ¢, £, ¥, ₧, ƒ, á, í, ó, ú, ñ, Ñ, ª, º, ¿, ⌐, ¬, ½, ¼, ¡, «, », ░, ▒, ▓, │, ┤, ╡, ╢, ╖, ╕, ╣, ║, ╗, ╝, ╜, ╛, ┐, └, ┴, ┬, ├, ─, ┼, ╞, ╟, ╚, ╔, ╩, ╦, ╠, ═, ╬, ╧, ╨, ╤, ╥, ╙, ╘, ╒, ╓, ╫, ╪, ┘, ┌, █, ▄, ▌, ▐, ▀, α, ß, Γ, π, Σ, σ, µ, τ, Φ, Θ, Ω, δ, ∞, φ, ε, ∩, ≡, ±, ≥, ≤, ⌠, ⌡, ÷, ≈, °, ∙, ·, √, ⁿ, ², ■,   */
 /* state 0  Unknown Char */{    0,   0,   0,   0,   0,   0,   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 /* state 1  Start/Done */  {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0, 74, 75, 67, 60, 76, 66, 61, 62, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 77, 58, 69, 68, 72,  0,  0, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  0,  0,  0,  0,  0,  0, 57,  2,  7, 15, 17, 57, 57, 57, 23, 57, 57, 57, 57, 57, 25, 28, 57, 37, 57, 41, 57, 45, 48, 57, 57, 57,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 /* state 2  b ID */        {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  1,  1,  1,  1,  1,  0,  0, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  0,  0,  0,  0,  0,  0, 57, 57, 57, 57,  3, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -79,7 +94,8 @@ const int edges [79] [256]={/*NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, HT, LF
 /* state 56 writesym */    {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  1,  1,  1,  1,  1,  0,  0, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  0,  0,  0,  0,  0,  0, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 /* state 57 Misc ID */     {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  1,  1,  1,  1,  1,  0,  0, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  0,  0,  0,  0,  0,  0, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 /* state 58 simicolonsym */{    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-/* state 59 Number */      {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59,  1,  1,  1,  1,  1,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+/* state 59 Number */      {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+// /* state 59 Number */      {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59,  1,  1,  1,  1,  1,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
                             /*NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, HT, LF, VT, FF, CR, SO, SI, DLE, DC1, DC2, DC3, DC4, NAK, SYN, ETB, CAN, EM, SUB, ESC, FS, GS, RS, US, SPC,  !,  ",  #,  $,  %,  &,  ',  (,  ),  *,  +,  ,,  -,  .,  /,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  :,  ;,  <,  =,  >,  ?,  @,  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  [,  \,  ],  ^,  _,  `,  a,  b,  c,  d,  e,  f,  g,  h,  i,  j,  k,  l,  m,  n,  o,  p,  q,  r,  s,  t,  u,  v,  w,  x,  y,  z,  {,  |,  },  ~, DEL, Ç, ü, é, â, ä, à, å, ç, ê, ë, è, ï, î, ì, Ä, Å, É, æ, Æ, ô, ö, ò, û, ù, ÿ, Ö, Ü, ¢, £, ¥, ₧, ƒ, á, í, ó, ú, ñ, Ñ, ª, º, ¿, ⌐, ¬, ½, ¼, ¡, «, », ░, ▒, ▓, │, ┤, ╡, ╢, ╖, ╕, ╣, ║, ╗, ╝, ╜, ╛, ┐, └, ┴, ┬, ├, ─, ┼, ╞, ╟, ╚, ╔, ╩, ╦, ╠, ═, ╬, ╧, ╨, ╤, ╥, ╙, ╘, ╒, ╓, ╫, ╪, ┘, ┌, █, ▄, ▌, ▐, ▀, α, ß, Γ, π, Σ, σ, µ, τ, Φ, Θ, Ω, δ, ∞, φ, ε, ∩, ≡, ±, ≥, ≤, ⌠, ⌡, ÷, ≈, °, ∙, ·, √, ⁿ, ², ■,   */
 /* state 60 plussym */     {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 /* state 61 periodsym */   {    1,   1,   1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,  1,   1,   1,  1,  1,  1,  1,   1,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,   1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -119,18 +135,6 @@ const int edges [79] [256]={/*NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, HT, LF
               /* state 0, 1, 2, 3, 4, 5,  6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78*/
 const int symbols[79]={0, 1, 2, 2, 2, 2, 21, 2, 2, 2, 27,  2,  2,  2, 28,  2, 26,  2,  2,  2, 33,  2, 22,  2, 23,  2,  2,  8,  2,  2,  2,  2,  2,  2,  2,  2, 30,  2,  2,  2, 32,  2,  2,  2, 24,  2,  2, 29,  2,  2,  2,  2, 25,  2,  2,  2, 31,  2, 18,  3,  4, 19,  7,  0,  0,  1,  5,  6,  9, 11, 10, 12, 13, 14, 15, 16, 17,  0, 20};
 
-/*
-    This is the array that you can look up the symbol number in and get the text
-    equivalent of the symbol we send to file. Just put in the symbol number as the
-    index into the array.
-
-    Special note: I know I said nulsym is not used by the language, but you do use
-    it once at the end of every file/program. Only then should you print symbol 1.
-
-    --Mel Pelchat
-*/
-const char token[34][13]={"", "nulsym", "identsym", "numbersym", "plussym", "minussym", "multsym", "slashsym", "oddsym", "eqlsym", "neqsym", "lessym", "leqsym", "gtrsym", "geqsym", "lparentsym", "rparentsym", "commasym", "semicolonsym", "periodsym", "becomessym", "beginsym", "endsym", "ifsym", "thensym", "whilesym", "dosym", "callsym", "constsym", "varsym", "procsym", "writesym", "readsym", "elsesym"};
-
 /*  int nextState(int state, char next)
 
     This function takes in one state and the next character. It returns the next
@@ -162,144 +166,305 @@ const char token[34][13]={"", "nulsym", "identsym", "numbersym", "plussym", "min
 
     --Mel Pelchat
 */
-int nextState(int state, char next);
-void clean();
-void source();
-void remove_comments();
+
+int analyzeTokens(char *fileName);      // Display all tokens found within the program
+void clean(char *fileName);             // Displays the code without any comments
+int isLetter(char c);                   // Returns 1 if it is a letter.  Otherwise, returns 0
+int nextState(int state, char next);    // Retrieves next state for analyzeTokens
+void remove_comments(char *fileName);   // The display header for function clean
+void source(char *fileName);            // Displays the code with comments
 
 
-int main(int argc, char * argv[])
+// Example to Run:   Lexer.exe input.txt
+// Optional Arguments:
+//   Display Code Without Comments:  --clean
+//   Display Code With Comments:     --source
+// Example to Run all Functions:   Lexer.exe input.txt --clean --source
+int main(int argc, char *argv[])
 {
-    char clean_array[8] = "--clean";
-    char source_array[8] = "--source";
-    
-    int i; 
-    
-    if(argc < 2)
-        printf("\n\nno command line prompts were passed.\n\n");
-	
-	for(i = 1; i < argc; i++)
+    int i;  // Used to traverse argv[] to view passed arguments at run-time
+
+    // If no arguments were passed when running this program, then:
+    if(argc < 2) {
+        printf("\nError:  No arguments passed when running this program.\n"); //Cannot proceed without the file name
+        printf("\nThe pl0 code must be saved as a file and passed as an argument.\n");
+        printf("For example, if we are running Windows and our code is in input.txt then:\n");
+        printf("\t\tlexer.exe input.txt\n");
+        printf("\nTo print the contents of input.txt with comments, then add --source\n");
+        printf("To print the contents of input.txt without any comments, then add --clean\n");
+        printf("For example to print everything:\n");
+        printf("\t\tlexer.exe input.txt --source --clean\n\n");
+        return -1;  // Terminate program with error flag
+    }
+
+    // Determine if the user wants to see the code without comments and / or with comments as well
+	for(i = 2; i < argc; i++)
 	{
-	    if(strcmp(clean_array, argv[i]) == 0)
-	        clean();
-	        
-	    if(strcmp(source_array, argv[i]) == 0)
-	        source();
+	    // The user wishes to see the code without any comments displayed
+	    if(strcmp("--clean", argv[i]) == 0) {
+            clean(argv[1]);             //Need to pass the file name to open the right file
+	    }
+	    // The user wishes to see the code as it is with all comments
+	    if(strcmp("--source", argv[i]) == 0) {
+            source(argv[1]);            //Need to pass the file name to open the right file
+	    }
 	}
-    
-    printf("\n\n");
-    
+
+	// Will always display the program broken down into individual tokens
+    analyzeTokens(argv[1]);
+
     return 0;
 }
 
-void source()
-{
-    FILE * ifp = fopen("input.pl0", "r");
-    printf("\n\nsource code:\n");
-    printf("------------\n");
-    
-    int c;
-    
-    while((c = fgetc(ifp)) != EOF)
-       {
-           putchar(c);
-       }
 
-    printf("\n\n");
-    rewind(ifp);
-    fclose(ifp);
+// Prints the 3rd output option - each token found in the program
+int analyzeTokens(char *fileName)
+{
+    FILE *inputFile = fopen(fileName, "r"); // Reads the program
+    char c = ' ';   // Will read the program one char at a time
+    int num;
+
+    struct tokNode token;   // Not using linked list this way
+    struct tokNode prevTok; // Will keep track of previous token for error handling
+    prevTok.tokType = 0;   // Safely initialized to a null token type
+
+    int stateNow;   // The current state we are at within "const int edges"
+    int statePrev;  // The previous state we were at within "const int edges"
+    int position;   // The current position in the identifier string
+
+
+    printf("\n\ntokens:\n");
+    printf("-------\n");
+
+
+    stateNow = 1;   // Initialize at the "Begin / End" state
+    statePrev = 1;  // Initialize at the "Begin / End" state
+    position = 0;
+    token.tok[0] = '\0';    // Null terminate the string
+    // Reads the program one char at a time and saves symbols (tokens) to linked list
+    while ( c != EOF )
+    {
+        c = getc(inputFile);    //Retrieves the first char of the next token
+
+        // Error checking if declaring variable that starts with a number
+        if ( (prevTok.tokType == 29) && (position == 0) && (isLetter(c) == 0) ) {
+            printf("\nERROR:  Variables must start with a letter.\n\n");
+            c = EOF;
+            break;
+        }
+
+        if (c == EOF) {
+            stateNow = nextState(statePrev, ' ');   // EOF = -1 which would break my function. Instead I pass it white space
+        }
+        else {
+            stateNow = nextState(statePrev, c);     // Get the next state
+        }
+
+        if (stateNow == 1)  // if we are back at 1
+        {
+            if (statePrev == 1) {   // Either it was whitespace
+                continue;           // and we continue
+            }
+            else if (statePrev == 65)   // or it was a comment
+            {
+                ungetc(c, inputFile);   // return the unused character to the file and proceed
+                position = 0;
+                token.tok[0]='\0';
+            }
+            else    // or it wasn't
+            {
+                /*
+                    This is where you will check to see if the identifier represents a number.
+                    If its a number you will have to check if it's greater than 65535. If it is then you give the error message,
+                    "Number too large",  close the file and then "exit(1);" to indicate that we terminated with an error
+                    The "exit" function takes a parameter and terminates a program even in a function so it
+                    is required at this point.
+                */
+                if (statePrev == 59)
+                {
+                    num = atoi(token.tok);
+                    if (num > 65535)
+                    {
+                        printf("Error, max number size is 65535 and %d was given.", num);
+                        fclose(inputFile);
+                        exit(1);
+                    }
+                }
+
+
+                ungetc(c, inputFile);                               // so we put the character back to use next run
+                printf("%s\t%d\n", token.tok, symbols[statePrev]);  // print the token in the output
+                position = 0;                                       // reset our string pointer
+                token.tok[0]='\0';                                  // and our string for the next token
+                prevTok.tokType = symbols[statePrev];  // Updates what the previous token type was
+            }
+        }
+        else if (stateNow == 0)
+        {
+            /*
+                This is where you check to see what the previous state was, and write an error message stating the appropriate message
+
+                Option 1: We received a bad character that is not used in PL0. e.g. '"' is not used at all. Return that the current
+                character was not recognized as a part of the language
+
+                Option 2: We received a ':' but did not receive a '=' right after. PL0 does not use ':' in any way other than to follow
+                with a '=' for assignments. State that we received a ':' character, and expected a '=', but instead got a "%c" instead
+
+                In any option you will need to close the file, and then exit(1); to terminate the program.
+            */
+            if (statePrev == 59)
+            {
+                printf("Error, identifier started with number.\n");
+                fclose(inputFile);
+                exit(1);
+            } else if (statePrev == 77)
+            {
+                printf("Error, expected '=' after ':' but '%c' was encountered instead.\n", c);
+                fclose(inputFile);
+                exit(1);
+            } else
+            {
+                printf("Error, char is not found in pl0 lexography.\n");
+                fclose(inputFile);
+                exit(1);
+            }
+        }
+        else   // If we aren't at 1 or 0 we're not done so we
+        {
+            /*
+                This is where you will check to see if the position pointer is at 12 already. If it is allowed
+                to continue, we will crash. Instead output that the identifier was longer than 12 characters,
+                close the file, and then use the function "exit(1);" to exit the program. We shouldn't use an
+                identifier too long anyways.
+            */
+            if (position + 1 > TOK_WIDTH - 1){  // We reserve 0-11 for the identifier, if position + 1 > 12 which is the max length of an identifier
+            	printf("Error: identifier too long.\n");    // We return an error
+            	fclose(inputFile);
+            	exit(1);                        // and exit the program
+            }
+
+            if (stateNow < 63 || stateNow > 65)
+            {
+                token.tok[position] = c;        // Add the character to the string
+                token.tok[position+1] = '\0';   // Move the string terminator
+                position++;                     // Increment our position
+            }
+        }
+        statePrev = stateNow;   // If we get here, time to move onto the next loop
+    }
+    if (stateNow != 1)          // If we didn't end in the final state
+    {
+        /*
+            Need to check to see what happened. Either we're in state 0, or we're in the middle of a token for some reason
+            We need to tell the user what the problem is and then "exit(1)"
+        */
+        if (stateNow == 0)
+        {
+            printf("Ended file on an error.\n");
+        } else if (stateNow !=63 && stateNow != 64)
+        {
+            printf("Ended file unexpectedly in the middle of a token.\n");
+        } else
+        {
+            printf("Ended file in the middle of a comment.\n");
+        }
+        fclose(inputFile);
+        exit(1);
+    }
+
+    fclose(inputFile);
+    return 0;
 }
 
-void clean()
+
+// Displays the header in preparation to display the code without any comments included
+void clean(char *fileName)
 {
-    
-    printf("\nsource code without comments:\n");
-    printf("----------------------------\n");
-    remove_comments();
-    
+    printf("\nsource code without comments: %s\n", fileName);
+    printf("-----------------------------\n");
+    remove_comments(fileName);
 }
 
+
+
+// Returns 1 if it is a letter.  Otherwise, returns 0
+int isLetter(char c)
+{
+    if ( (c >= 65) && (c <= 90) ) {
+        return 1;   // c is an uppercase letter
+    }
+    else if ( (c >= 97) && (c <= 122) ) {
+        return 1;   // c is a lowercase letter
+    }
+    else if ( (c == ' ') ) {
+        return 2;   // c is a whitespace
+    }
+    else {
+        return 0;   // c is not a letter at all
+    }
+}
+
+
+// Supporting function for analyzeTokens to traverse array edges
 int nextState(int state, char next)
 {
     return edges[state][(int)next];
 }
 
-void remove_comments()
 
+// Displays the program code without any comments included
+void remove_comments(char *fileName)
 {
+    FILE *ifp = fopen(fileName, "r");
 
-    FILE * ifp = fopen("input.pl0", "r");
-
-    
-
-    int current_char, numSpaces=0;
-
-    
+    int current_char;
 
     while ((current_char = getc(ifp)) != EOF )
-
     {
-
-        
-
-        if (current_char=='/')             
-
+        if (current_char=='/')
         {
-
             current_char=getc(ifp);
 
-        
-
-            if (current_char != '*')                 
-
+            if (current_char != '*')
             {
-
                 putchar('/');
-
                 ungetc(current_char,ifp);
-
             }
-
-   
-
             else
-
             {
-
                 int previous_char;
-                numSpaces=2;
-
                 putchar(' ');
-
-                do
-
-                {
-
+                do {
                     previous_char=current_char;
-
                     current_char=getc(ifp);
-                    numSpaces++;
-
                 } while (current_char!='/' || previous_char != '*');
-                
-                for(numSpaces; numSpaces>0; numSpaces--)
-                	putchar(' ');
-
             }
-
         }
-
-        
-
         else
-
         {
-
             putchar(current_char);
-
         }
+    }
+    printf("\n");
+}
 
+
+// Displays the program code with comments still included
+void source(char *fileName)
+{
+    FILE *ifp = fopen(fileName, "r");   // fileName provided at run-time as argument
+    printf("\n\nsource code: %s\n", fileName);
+    printf("------------\n");
+
+    int c;  // will be used to read the file one char at a time
+
+    while((c = fgetc(ifp)) != EOF)
+    {
+       putchar(c);  // Displays a char from the program code file
     }
 
+    printf("\n\n");
+    rewind(ifp);
+    fclose(ifp);
 }
 
