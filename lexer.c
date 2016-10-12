@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TOK_WIDTH 13    // The max width of an identifier
 
@@ -328,7 +329,7 @@ void remove_comments(char *fileName)
 {
     FILE *ifp = fopen(fileName, "r");
 
-    int current_char;
+    int current_char, numSpaces=0;
 
     while ((current_char = getc(ifp)) != EOF )
     {
@@ -344,12 +345,16 @@ void remove_comments(char *fileName)
             else
             {
                 int previous_char;
+                numSpaces++;
                 putchar(' ');
                 do {
                     previous_char=current_char;
                     current_char=getc(ifp);
+                  	numSpaces++;
                 } while (current_char!='/' || previous_char != '*');
             }
+            for(numSpaces; numSpaces>0; numSpaces--)
+            	putchar(' ');
         }
         else
         {
