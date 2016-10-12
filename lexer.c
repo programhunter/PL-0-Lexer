@@ -286,6 +286,11 @@ int analyzeTokens(char *fileName)
                 close the file, and then use the function "exit(1);" to exit the program. We shouldn't use an
                 identifier too long anyways.
             */
+	    if(position >= TOK_WIDTH-1){
+            	printf("Error: identifier too long.\n");
+            	break;
+            }
+		
             if (stateNow < 63 || stateNow > 65)
             {
                 token.tok[position] = c;        // Add the character to the string
