@@ -246,13 +246,6 @@ int analyzeTokens(char *fileName)
     {
         c = getc(inputFile);    //Retrieves the first char of the next token
 
-        // Error checking if declaring variable that starts with a number
-        if ( (prevTok.tokType == 29) && (position == 0) && (isLetter(c) == 0) ) {
-            printf("\nERROR:  Variables must start with a letter.\n\n");
-            c = EOF;
-            break;
-        }
-
         if (c == EOF) {
             stateNow = nextState(statePrev, ' ');   // EOF = -1 which would break my function. Instead I pass it white space
         }
