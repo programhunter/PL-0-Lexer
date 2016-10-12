@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define TOK_WIDTH 13    // The max width of an identifier
 
@@ -169,6 +168,7 @@ const int symbols[79]={0, 1, 2, 2, 2, 2, 21, 2, 2, 2, 27,  2,  2,  2, 28,  2, 26
 
 int analyzeTokens(char *fileName);      // Display all tokens found within the program
 void clean(char *fileName);             // Displays the code without any comments
+int isLetter(char c);                   // Returns 1 if it is a letter.  Otherwise, returns 0
 int nextState(int state, char next);    // Retrieves next state for analyzeTokens
 void remove_comments(char *fileName);   // The display header for function clean
 void source(char *fileName);            // Displays the code with comments
@@ -183,9 +183,17 @@ int main(int argc, char *argv[])
 {
     int i;  // Used to traverse argv[] to view passed arguments at run-time
 
-    if(argc < 2) {  //First argument is the file name
-        printf("\n\nno command line prompts were passed.\n\n"); //Cannot proceed without the file name
-        return -1;
+    // If no arguments were passed when running this program, then:
+    if(argc < 2) {
+        printf("\nError:  No arguments passed when running this program.\n"); //Cannot proceed without the file name
+        printf("\nThe pl0 code must be saved as a file and passed as an argument.\n");
+        printf("For example, if we are running Windows and our code is in input.txt then:\n");
+        printf("\t\tlexer.exe input.txt\n");
+        printf("\nTo print the contents of input.txt with comments, then add --source\n");
+        printf("To print the contents of input.txt without any comments, then add --clean\n");
+        printf("For example to print everything:\n");
+        printf("\t\tlexer.exe input.txt --source --clean\n\n");
+        return -1;  // Terminate program with error flag
     }
 
     // Determine if the user wants to see the code without comments and / or with comments as well
@@ -215,22 +223,34 @@ int analyzeTokens(char *fileName)
     char c = ' ';   // Will read the program one char at a time
 
     struct tokNode token;   // Not using linked list this way
+    struct tokNode prevTok; // Will keep track of previous token for error handling
+    prevTok.tokType = 0;   // Safely initialized to a null token type
 
     int stateNow;   // The current state we are at within "const int edges"
     int statePrev;  // The previous state we were at within "const int edges"
     int position;   // The current position in the identifier string
-    token.tok[0] = '\0';    // Null terminate the string
+
 
     printf("\n\ntokens:\n");
     printf("-------\n");
-    // Reads the program one char at a time and saves symbols (tokens) to linked list
+
 
     stateNow = 1;   // Initialize at the "Begin / End" state
     statePrev = 1;  // Initialize at the "Begin / End" state
     position = 0;
+    token.tok[0] = '\0';    // Null terminate the string
+    // Reads the program one char at a time and saves symbols (tokens) to linked list
     while ( c != EOF )
     {
         c = getc(inputFile);    //Retrieves the first char of the next token
+
+        // Error checking if declaring variable that starts with a number
+        if ( (prevTok.tokType == 29) && (position == 0) && (isLetter(c) == 0) ) {
+            printf("\nERROR:  Variables must start with a letter.\n\n");
+            c = EOF;
+            break;
+        }
+
         if (c == EOF) {
             stateNow = nextState(statePrev, ' ');   // EOF = -1 which would break my function. Instead I pass it white space
         }
@@ -262,6 +282,7 @@ int analyzeTokens(char *fileName)
                 printf("%s\t%d\n", token.tok, symbols[statePrev]);  // print the token in the output
                 position = 0;                                       // reset our string pointer
                 token.tok[0]='\0';                                  // and our string for the next token
+                prevTok.tokType = symbols[statePrev];  // Updates what the previous token type was
             }
         }
         else if (stateNow == 0)
@@ -286,11 +307,11 @@ int analyzeTokens(char *fileName)
                 close the file, and then use the function "exit(1);" to exit the program. We shouldn't use an
                 identifier too long anyways.
             */
-	    if(position >= TOK_WIDTH-1){
+            if (position >= TOK_WIDTH-1){
             	printf("Error: identifier too long.\n");
             	break;
             }
-		
+
             if (stateNow < 63 || stateNow > 65)
             {
                 token.tok[position] = c;        // Add the character to the string
@@ -322,6 +343,25 @@ void clean(char *fileName)
 }
 
 
+
+// Returns 1 if it is a letter.  Otherwise, returns 0
+int isLetter(char c)
+{
+    if ( (c >= 65) && (c <= 90) ) {
+        return 1;   // c is an uppercase letter
+    }
+    else if ( (c >= 97) && (c <= 122) ) {
+        return 1;   // c is a lowercase letter
+    }
+    else if ( (c == ' ') ) {
+        return 2;   // c is a whitespace
+    }
+    else {
+        return 0;   // c is not a letter at all
+    }
+}
+
+
 // Supporting function for analyzeTokens to traverse array edges
 int nextState(int state, char next)
 {
@@ -334,7 +374,7 @@ void remove_comments(char *fileName)
 {
     FILE *ifp = fopen(fileName, "r");
 
-    int current_char, numSpaces=0;
+    int current_char;
 
     while ((current_char = getc(ifp)) != EOF )
     {
@@ -350,16 +390,12 @@ void remove_comments(char *fileName)
             else
             {
                 int previous_char;
-                numSpaces++;
                 putchar(' ');
                 do {
                     previous_char=current_char;
                     current_char=getc(ifp);
-                  	numSpaces++;
                 } while (current_char!='/' || previous_char != '*');
             }
-            for(numSpaces; numSpaces>0; numSpaces--)
-            	putchar(' ');
         }
         else
         {
